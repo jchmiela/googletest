@@ -1837,13 +1837,13 @@ inline Expectation::Expectation(internal::ExpectationBase& exp)  // NOLINT
 // of the method used in call is a result of macro expansion.
 // See CompilesWithMethodNameExpandedFromMacro tests in
 // internal/gmock-spec-builders_test.cc for more details.
-#define GMOCK_ON_CALL_IMPL_(obj, call) \
-    ((obj).gmock_##call).InternalDefaultActionSetAt(__FILE__, __LINE__, \
-                                                    #obj, #call)
-#define ON_CALL(obj, call) GMOCK_ON_CALL_IMPL_(obj, call)
+#define GMOCK_ON_CALL_IMPL_(obj, ...) \
+    ((obj).gmock_##__VA_ARGS__).InternalDefaultActionSetAt(__FILE__, __LINE__, \
+                                                    #obj, #__VA_ARGS__)
+#define ON_CALL(obj, ...) GMOCK_ON_CALL_IMPL_(obj, __VA_ARGS__)
 
-#define GMOCK_EXPECT_CALL_IMPL_(obj, call) \
-    ((obj).gmock_##call).InternalExpectedAt(__FILE__, __LINE__, #obj, #call)
-#define EXPECT_CALL(obj, call) GMOCK_EXPECT_CALL_IMPL_(obj, call)
+#define GMOCK_EXPECT_CALL_IMPL_(obj, ...) \
+    ((obj).gmock_##__VA_ARGS__).InternalExpectedAt(__FILE__, __LINE__, #obj, #__VA_ARGS__)
+#define EXPECT_CALL(obj, ...) GMOCK_EXPECT_CALL_IMPL_(obj, __VA_ARGS__)
 
 #endif  // GMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_

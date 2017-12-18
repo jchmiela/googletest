@@ -3,6 +3,7 @@ $$ This is a Pump source file.  Please use Pump to convert it to
 $$ gmock-generated-function-mockers.h.
 $$
 $var n = 10  $$ The maximum arity we support.
+$var m = 5  $$ The maximum amount of template parameters we support.
 // Copyright 2007, Google Inc.
 // All rights reserved.
 //
@@ -208,6 +209,100 @@ $for i [[
 #define MOCK_CONST_METHOD$i[[]]_T_WITH_CALLTYPE(ct, m, ...) \
     GMOCK_METHOD$i[[]]_(typename, const, ct, m, __VA_ARGS__)
 
+]]
+
+// Type alias for "types with a hole" support.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_TYPE_(number) \
+  GTEST_CONCAT_TOKEN_(gmock_a##number##_type_, __LINE__)
+
+// The method returning static mocker container.
+// Protected by GMOCK_MOCKER_MUTEX_.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_MAP_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_map_, __LINE__)
+
+// The method returning mutex protecting GMOCK_MOCKER_MAP_.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_MUTEX_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_mutex_, __LINE__)
+
+// The variable invoking cleanup methods on mock destruction.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_GUARD_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_guard_, __LINE__)
+
+// The method for cleaning up the static mockers.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_ERASER_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_eraser_, __LINE__)
+
+// Utility macro added for simplification
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_REGISTER_GUARD_(arity, constness, Method, ...) \
+  { \
+    ::testing::internal::MutexLock lock(&GMOCK_MOCKER_MUTEX_(arity, constness, Method)<__VA_ARGS__>()); \
+    if(GMOCK_MOCKER_MAP_(arity, constness, Method)<__VA_ARGS__>().find(this) \
+        == GMOCK_MOCKER_MAP_(arity, constness, Method)<__VA_ARGS__>().end()) { \
+      GMOCK_MOCKER_GUARD_(arity, constness, Method).addCallback( \
+        &GMOCK_MOCKER_ERASER_(arity, constness, Method)<__VA_ARGS__>); \
+    } \
+  }
+
+
+$range k 1..m
+$for i [[
+$for k [[
+$range j 1..i
+$range l 1..k
+$var macro_t_params = [[$for l, [[gmock_a$l[[]]_t_param]]]]
+$var macro_params = [[$for j, [[gmock_a$j[[]]_param]]]]
+$var t_params = [[$for l, [[gmock_a$l[[]]_t_param TEMPL_ARG$l]]]]
+$var t_args = [[$for l, [[TEMPL_ARG$l]]]]
+$var params = [[$for j, \
+              [[GMOCK_MOCKER_TYPE_($j[[]])<$t_args> gmock_a$j]]]]
+$var args = [[$for j, [[gmock_a$j]]]]
+$var matchers = [[$for j, [[::testing::Matcher<gmock_a$j[[]]_param> gmock_a$j]]]]
+$var aliasing = [[$for j; \
+                  [[template<$t_params> using GMOCK_MOCKER_TYPE_($j[[]]) = gmock_a$j[[]]_param]]]]
+$var comma = [[ $if i > 0 [[,]] $else [[]] ]]
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL$k[[]]_METHOD$i[[]]($macro_t_params, Method, return_type $comma $macro_params) \
+  template<$t_params> \
+  static auto& GMOCK_MOCKER_MAP_($i, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, ::testing::FunctionMocker<return_type($params)>>(); \
+    return *mocker_map; \
+  } \
+  template<$t_params> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_($i, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<$t_params> \
+  static void GMOCK_MOCKER_ERASER_($i, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_($i, , Method)<$t_args>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_($i, , Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  $aliasing; \
+  template<$t_params>  \
+  return_type Method( \
+      $params) { \
+    GMOCK_REGISTER_GUARD_($i, , Method, $t_args); \
+    GMOCK_MOCKER_MAP_($i, , Method)<$t_args>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_($i, , Method)<$t_args>()[this].Invoke($args); \
+  } \
+  template<$t_params> \
+  ::testing::MockSpec<return_type($params)>& \
+      gmock_##Method($matchers) { \
+    GMOCK_REGISTER_GUARD_($i, , Method, $t_args); \
+    GMOCK_MOCKER_MAP_($i, , Method)<$t_args>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_($i, , Method)<$t_args>()[this].With($args); \
+  } \
+
+
+
+]]
 ]]
 
 // A MockFunction<F> class has one mock method whose type is F.  It is

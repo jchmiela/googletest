@@ -503,6 +503,34 @@ struct RemoveConstFromKey<std::pair<const K, V> > {
 template <bool kValue>
 struct BooleanConstant {};
 
+// Utility class for cleanup on mock destruction.
+// Template method mocker specific.
+class MockerDestructionGuard
+{
+ public:
+  typedef void (*Callback)(const void*);
+  typedef std::vector<Callback> CallbackList;
+
+  MockerDestructionGuard(const void* mock_obj) : mock_obj_(mock_obj){}
+
+  void addCallback(Callback callback)
+  {
+    callback_list_.push_back(callback);
+  }
+
+  ~MockerDestructionGuard()
+  {
+    for (CallbackList::const_iterator it = callback_list_.begin();
+        it != callback_list_.end(); ++it)
+      (*it)(mock_obj_);
+  }
+
+ private:
+  std::vector<Callback> callback_list_;
+  const void* mock_obj_;
+};
+
+
 }  // namespace internal
 }  // namespace testing
 

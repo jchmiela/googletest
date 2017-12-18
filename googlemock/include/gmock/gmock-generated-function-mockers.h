@@ -823,6 +823,5200 @@ using internal::FunctionMocker;
 #define MOCK_CONST_METHOD10_T_WITH_CALLTYPE(ct, m, ...) \
     GMOCK_METHOD10_(typename, const, ct, m, __VA_ARGS__)
 
+// Type alias for "types with a hole" support.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_TYPE_(number) \
+  GTEST_CONCAT_TOKEN_(gmock_a##number##_type_, __LINE__)
+
+// The method returning static mocker container.
+// Protected by GMOCK_MOCKER_MUTEX_.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_MAP_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_map_, __LINE__)
+
+// The method returning mutex protecting GMOCK_MOCKER_MAP_.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_MUTEX_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_mutex_, __LINE__)
+
+// The variable invoking cleanup methods on mock destruction.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_GUARD_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_guard_, __LINE__)
+
+// The method for cleaning up the static mockers.
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_MOCKER_ERASER_(arity, constness, Method) \
+  GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_eraser_, __LINE__)
+
+// Utility macro added for simplification
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define GMOCK_REGISTER_GUARD_(arity, constness, Method, ...) \
+  { \
+    ::testing::internal::MutexLock lock(&GMOCK_MOCKER_MUTEX_(arity, \
+        constness, Method)<__VA_ARGS__>()); \
+    if(GMOCK_MOCKER_MAP_(arity, constness, Method)<__VA_ARGS__>().find(this) \
+        == GMOCK_MOCKER_MAP_(arity, constness, Method)<__VA_ARGS__>().end()) { \
+      GMOCK_MOCKER_GUARD_(arity, constness, Method).addCallback( \
+        &GMOCK_MOCKER_ERASER_(arity, constness, Method)<__VA_ARGS__>); \
+    } \
+  }
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD0(gmock_a1_t_param, Method, return_type    ) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(0, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type()>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(0, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(0, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(0, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  ; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      ) { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1>()[this].Invoke(); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type()>& \
+      gmock_##Method() { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1>()[this].With(); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD0(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type    ) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(0, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type()>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(0, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(0, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(0, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  ; \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      ) { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type()>& \
+      gmock_##Method() { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD0(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type    ) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(0, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type()>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(0, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(0, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(0, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  ; \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      ) { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type()>& \
+      gmock_##Method() { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD0(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type    ) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(0, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type()>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(0, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(0, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(0, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  ; \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      ) { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type()>& \
+      gmock_##Method() { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD0(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type    ) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(0, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type()>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(0, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(0, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(0, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  ; \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      ) { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type()>& \
+      gmock_##Method() { \
+    GMOCK_REGISTER_GUARD_(0, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(0, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD1(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(1, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1)>>(); \
+        \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(1, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(1, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(1, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(1, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> \
+      gmock_a1)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1>()[this].With(gmock_a1); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD1(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(1, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(1, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(1, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(1, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD1(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(1, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(1, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(1, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(1, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD1(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(1, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(1, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(1, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(1, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD1(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(1, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(1, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(1, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(1, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1) { \
+    GMOCK_REGISTER_GUARD_(1, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(1, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD2(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(2, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(2, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(2, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(2, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(2, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD2(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(2, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(2, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(2, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(2, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD2(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, \
+    gmock_a2_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(2, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(2, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(2, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(2, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD2(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(2, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(2, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(2, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(2, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD2(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(2, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(2, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(2, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(2, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2) { \
+    GMOCK_REGISTER_GUARD_(2, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(2, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD3(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(3, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(3, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(3, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(3, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(3, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD3(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(3, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(3, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(3, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(3, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD3(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(3, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(3, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(3, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(3, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD3(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(3, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(3, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(3, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(3, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD3(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(3, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(3, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(3, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(3, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3); \
+        \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3) { \
+    GMOCK_REGISTER_GUARD_(3, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(3, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, gmock_a3); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD4(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(4, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(4, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(4, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(4, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(4, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD4(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(4, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(4, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(4, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(4, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD4(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param, gmock_a4_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(4, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(4, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(4, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(4, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD4(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(4, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(4, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(4, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(4, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD4(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(4, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(4, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(4, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(4, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4) { \
+    GMOCK_REGISTER_GUARD_(4, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(4, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD5(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(5, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(5, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(5, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(5, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(5, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4, gmock_a5); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD5(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(5, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(5, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(5, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(5, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD5(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param, gmock_a4_param, gmock_a5_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(5, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(5, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(5, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(5, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD5(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(5, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(5, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(5, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(5, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD5(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(5, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(5, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(5, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(5, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5) { \
+    GMOCK_REGISTER_GUARD_(5, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(5, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD6(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(6, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(6, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(6, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(6, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(6, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD6(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(6, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(6, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(6, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(6, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD6(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param, gmock_a4_param, gmock_a5_param, gmock_a6_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(6, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(6, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(6, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(6, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD6(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(6, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(6, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(6, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(6, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD6(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(6, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(6, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(6, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(6, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6) { \
+    GMOCK_REGISTER_GUARD_(6, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(6, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD7(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(7, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(7, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(7, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(7, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(7, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD7(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(7, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(7, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(7, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(7, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD7(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param, gmock_a4_param, gmock_a5_param, gmock_a6_param, \
+    gmock_a7_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(7, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(7, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(7, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(7, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD7(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(7, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(7, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(7, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(7, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD7(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(7, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(7, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(7, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(7, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7) { \
+    GMOCK_REGISTER_GUARD_(7, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(7, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD8(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param, gmock_a8_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(8, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(8, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(8, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(8, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(8, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, \
+        gmock_a8); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD8(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param, \
+    gmock_a8_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(8, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(8, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(8, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(8, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD8(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param, gmock_a4_param, gmock_a5_param, gmock_a6_param, \
+    gmock_a7_param, gmock_a8_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(8, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(8, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(8, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(8, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD8(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param, gmock_a8_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(8, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(8, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(8, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(8, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD8(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param, \
+    gmock_a8_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(8, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(8, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(8, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(8, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8) { \
+    GMOCK_REGISTER_GUARD_(8, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(8, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD9(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param, gmock_a8_param, \
+    gmock_a9_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(9, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1> gmock_a9)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(9, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(9, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(9, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(9, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1> gmock_a9)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, \
+        gmock_a9); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD9(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param, \
+    gmock_a8_param, gmock_a9_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(9, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2> gmock_a9)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(9, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(9, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(9, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2> gmock_a9)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD9(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param, gmock_a4_param, gmock_a5_param, gmock_a6_param, \
+    gmock_a7_param, gmock_a8_param, gmock_a9_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(9, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a9)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(9, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(9, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(9, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a9)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD9(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param, gmock_a8_param, \
+    gmock_a9_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(9, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a9)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(9, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(9, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(9, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a9)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD9(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param, \
+    gmock_a8_param, gmock_a9_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(9, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a9)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(9, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(9, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(9, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a9)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9) { \
+    GMOCK_REGISTER_GUARD_(9, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(9, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL1_METHOD10(gmock_a1_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param, gmock_a8_param, \
+    gmock_a9_param, gmock_a10_param) \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static auto& GMOCK_MOCKER_MAP_(10, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+        \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1> gmock_a10)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(10, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  static void GMOCK_MOCKER_ERASER_(10, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(10, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1> using GMOCK_MOCKER_TYPE_(1) = \
+      gmock_a1_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                  template<gmock_a1_t_param TEMPL_ARG1> using \
+                      GMOCK_MOCKER_TYPE_(10) = gmock_a10_param; \
+  template<gmock_a1_t_param TEMPL_ARG1>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1>()[this].SetOwnerAndName(this, \
+        #Method); \
+    return GMOCK_MOCKER_MAP_(10, , \
+        Method)<TEMPL_ARG1>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, \
+        gmock_a10); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1> gmock_a10)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9, \
+          ::testing::Matcher<gmock_a10_param> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1>()[this].With(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, \
+        gmock_a9, gmock_a10); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL2_METHOD10(gmock_a1_t_param, gmock_a2_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param, \
+    gmock_a8_param, gmock_a9_param, gmock_a10_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static auto& GMOCK_MOCKER_MAP_(10, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2> gmock_a10)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(10, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  static void GMOCK_MOCKER_ERASER_(10, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(10, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, \
+      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2> using GMOCK_MOCKER_TYPE_(10) = gmock_a10_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2> gmock_a10)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9, \
+          ::testing::Matcher<gmock_a10_param> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, \
+        TEMPL_ARG2>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL3_METHOD10(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, Method, return_type  ,  gmock_a1_param, gmock_a2_param, \
+    gmock_a3_param, gmock_a4_param, gmock_a5_param, gmock_a6_param, \
+    gmock_a7_param, gmock_a8_param, gmock_a9_param, gmock_a10_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static auto& GMOCK_MOCKER_MAP_(10, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a10)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(10, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  static void GMOCK_MOCKER_ERASER_(10, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(10, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3> using GMOCK_MOCKER_TYPE_(10) = gmock_a10_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, \
+                  TEMPL_ARG3> gmock_a10)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9, \
+          ::testing::Matcher<gmock_a10_param> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3>()[this].With(gmock_a1, gmock_a2, gmock_a3, gmock_a4, \
+        gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL4_METHOD10(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, Method, return_type  , \
+    gmock_a1_param, gmock_a2_param, gmock_a3_param, gmock_a4_param, \
+    gmock_a5_param, gmock_a6_param, gmock_a7_param, gmock_a8_param, \
+    gmock_a9_param, gmock_a10_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static auto& GMOCK_MOCKER_MAP_(10, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a10)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(10, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  static void GMOCK_MOCKER_ERASER_(10, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(10, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, \
+      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4> using GMOCK_MOCKER_TYPE_(10) = gmock_a10_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+          TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3, TEMPL_ARG4>()[this].Invoke(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, \
+        gmock_a10); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4> gmock_a10)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9, \
+          ::testing::Matcher<gmock_a10_param> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3, TEMPL_ARG4>()[this].With(gmock_a1, gmock_a2, gmock_a3, \
+        gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, \
+        gmock_a10); \
+  } \
+
+
+// INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
+#define MOCK_TEMPL5_METHOD10(gmock_a1_t_param, gmock_a2_t_param, \
+    gmock_a3_t_param, gmock_a4_t_param, gmock_a5_t_param, Method, \
+    return_type  ,  gmock_a1_param, gmock_a2_param, gmock_a3_param, \
+    gmock_a4_param, gmock_a5_param, gmock_a6_param, gmock_a7_param, \
+    gmock_a8_param, gmock_a9_param, gmock_a10_param) \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static auto& GMOCK_MOCKER_MAP_(10, , Method)(){ \
+    static auto mocker_map = new std::map<const void*, \
+        ::testing::FunctionMocker<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+        TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a10)>>(); \
+    return *mocker_map; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static ::testing::internal::Mutex& GMOCK_MOCKER_MUTEX_(10, , Method)(){ \
+    static auto mocker_mutex = new ::testing::internal::Mutex(); \
+    return *mocker_mutex; \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  static void GMOCK_MOCKER_ERASER_(10, , Method)(const void* mock_obj){ \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>().erase(mock_obj); \
+  } \
+  ::testing::internal::MockerDestructionGuard GMOCK_MOCKER_GUARD_(10, , \
+      Method) = \
+    ::testing::internal::MockerDestructionGuard(this); \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(1) = gmock_a1_param; \
+      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(2) = gmock_a2_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(3) = gmock_a3_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(4) = gmock_a4_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(5) = gmock_a5_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(6) = gmock_a6_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(7) = gmock_a7_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(8) = gmock_a8_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(9) = gmock_a9_param; \
+                      \
+                  template<gmock_a1_t_param TEMPL_ARG1, \
+                      gmock_a2_t_param TEMPL_ARG2, \
+                      gmock_a3_t_param TEMPL_ARG3, \
+                      gmock_a4_t_param TEMPL_ARG4, \
+                      gmock_a5_t_param TEMPL_ARG5> using GMOCK_MOCKER_TYPE_(10) = gmock_a10_param; \
+                      \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5>  \
+  return_type Method( \
+      GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, \
+          TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].SetOwnerAndName(this, #Method); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5>()[this].Invoke(gmock_a1, \
+        gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, \
+        gmock_a9, gmock_a10); \
+  } \
+  template<gmock_a1_t_param TEMPL_ARG1, gmock_a2_t_param TEMPL_ARG2, \
+      gmock_a3_t_param TEMPL_ARG3, gmock_a4_t_param TEMPL_ARG4, \
+      gmock_a5_t_param TEMPL_ARG5> \
+  ::testing::MockSpec<return_type(GMOCK_MOCKER_TYPE_(1)<TEMPL_ARG1, \
+      TEMPL_ARG2, TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5> gmock_a1, \
+              GMOCK_MOCKER_TYPE_(2)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a2, \
+              GMOCK_MOCKER_TYPE_(3)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a3, \
+              GMOCK_MOCKER_TYPE_(4)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a4, \
+              GMOCK_MOCKER_TYPE_(5)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a5, \
+              GMOCK_MOCKER_TYPE_(6)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a6, \
+              GMOCK_MOCKER_TYPE_(7)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a7, \
+              GMOCK_MOCKER_TYPE_(8)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a8, \
+              GMOCK_MOCKER_TYPE_(9)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a9, \
+              GMOCK_MOCKER_TYPE_(10)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+                  TEMPL_ARG4, TEMPL_ARG5> gmock_a10)>& \
+      gmock_##Method(::testing::Matcher<gmock_a1_param> gmock_a1, \
+          ::testing::Matcher<gmock_a2_param> gmock_a2, \
+          ::testing::Matcher<gmock_a3_param> gmock_a3, \
+          ::testing::Matcher<gmock_a4_param> gmock_a4, \
+          ::testing::Matcher<gmock_a5_param> gmock_a5, \
+          ::testing::Matcher<gmock_a6_param> gmock_a6, \
+          ::testing::Matcher<gmock_a7_param> gmock_a7, \
+          ::testing::Matcher<gmock_a8_param> gmock_a8, \
+          ::testing::Matcher<gmock_a9_param> gmock_a9, \
+          ::testing::Matcher<gmock_a10_param> gmock_a10) { \
+    GMOCK_REGISTER_GUARD_(10, , Method, TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5); \
+    GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, TEMPL_ARG3, \
+        TEMPL_ARG4, TEMPL_ARG5>()[this].RegisterOwner(this); \
+    return GMOCK_MOCKER_MAP_(10, , Method)<TEMPL_ARG1, TEMPL_ARG2, \
+        TEMPL_ARG3, TEMPL_ARG4, TEMPL_ARG5>()[this].With(gmock_a1, gmock_a2, \
+        gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, \
+        gmock_a10); \
+  } \
+
+
+
 // A MockFunction<F> class has one mock method whose type is F.  It is
 // useful when you just want your test code to emit some messages and
 // have Google Mock verify the right messages are sent (and perhaps at

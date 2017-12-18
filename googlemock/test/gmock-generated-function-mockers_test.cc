@@ -620,5 +620,97 @@ TEST(MockFunctionTest, AsStdFunctionReturnsReference) {
 }
 #endif  // GTEST_HAS_STD_FUNCTION_
 
+#ifndef COMMA
+  #define COMMA ,
+#endif
+
+template<typename T, int N>
+class ArrayLike{};
+
+template<typename T>
+class FunctionLike{};
+
+template<typename T1, typename T2>
+class PairLike{};
+
+
+class MockWithTemplateMethods{
+ public:
+  MockWithTemplateMethods() {}
+
+  MOCK_TEMPL1_METHOD0(typename,
+                      noDeduction, void);
+  MOCK_TEMPL1_METHOD0(int,
+                      nonTypeTemplateParameter, void);
+  MOCK_TEMPL1_METHOD1(typename,
+                      simpleDeduction, void, TEMPL_ARG1);
+  MOCK_TEMPL1_METHOD0(typename,
+                      returnTypeSpecification, TEMPL_ARG1);
+  MOCK_TEMPL1_METHOD1(typename,
+                      returnTypeDeduction, TEMPL_ARG1, TEMPL_ARG1);
+  MOCK_TEMPL2_METHOD1(typename, typename,
+                      deduceTwoTypes, void, PairLike<TEMPL_ARG1 COMMA TEMPL_ARG2>);
+  MOCK_TEMPL3_METHOD2(typename, typename, int,
+      complexDeduction,
+      FunctionLike<TEMPL_ARG1(ArrayLike<TEMPL_ARG2, TEMPL_ARG3>)>,
+      TEMPL_ARG1 (*)(TEMPL_ARG2 *), TEMPL_ARG2 (&)[TEMPL_ARG3]);
+ private:
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(MockWithTemplateMethods);
+};
+
+class TemplateMethodTest : public testing::Test {
+ protected:
+  StrictMock<MockWithTemplateMethods> mock;
+};
+
+TEST_F(TemplateMethodTest, ExplicitTemplateParameterWorks) {
+  EXPECT_CALL(mock, noDeduction<int>()).Times(1);
+  EXPECT_CALL(mock, noDeduction<TemplateMethodTest>()).Times(1);
+  EXPECT_CALL(mock, nonTypeTemplateParameter<7>()).Times(1);
+  EXPECT_CALL(mock, nonTypeTemplateParameter<15>()).Times(1);
+  EXPECT_CALL(mock, returnTypeSpecification<int>()).WillOnce(Return(15));
+  EXPECT_CALL(mock, returnTypeSpecification<double>()).WillOnce(Return(15.41));
+
+  mock.noDeduction<int>();
+  mock.noDeduction<TemplateMethodTest>();
+  mock.nonTypeTemplateParameter<7>();
+  mock.nonTypeTemplateParameter<15>();
+
+  ASSERT_EQ(mock.returnTypeSpecification<int>(), 15);
+  ASSERT_EQ(mock.returnTypeSpecification<double>(), 15.41);
+}
+
+TEST_F(TemplateMethodTest, SimpleParameterDeductionWorks) {
+  EXPECT_CALL(mock, simpleDeduction<int>(_)).Times(1);
+  EXPECT_CALL(mock, simpleDeduction<float>(_)).Times(2);
+  EXPECT_CALL(mock, simpleDeduction<double>(_)).Times(1);
+  EXPECT_CALL(mock, returnTypeDeduction<int>(_)).WillOnce(Return(15));
+  EXPECT_CALL(mock, returnTypeDeduction<double>(_)).WillOnce(Return(15.41));
+
+  mock.simpleDeduction(15);
+  mock.simpleDeduction(4.5f);
+  mock.simpleDeduction(0.1f);
+  mock.simpleDeduction(12.12);
+
+  ASSERT_EQ(mock.returnTypeDeduction(0), 15);
+  ASSERT_EQ(mock.returnTypeDeduction(0.0), 15.41);
+}
+
+TEST_F(TemplateMethodTest, DeductingMultipleTypesFromOneParameterWorks) {
+  EXPECT_CALL(mock, deduceTwoTypes<int, float>(_)).Times(1);
+
+  PairLike<int, float> pair;
+  mock.deduceTwoTypes(pair);
+}
+
+TEST_F(TemplateMethodTest, ComplexParameterDeductionWorks) {
+  EXPECT_CALL(mock, complexDeduction<int, float, 5>(_, _))
+      .WillOnce(Return(FunctionLike<int(ArrayLike<float, 5>)>()));
+
+  float dummyTable[5];
+  int (*dummyFunction)(float*) = nullptr;
+  mock.complexDeduction(dummyFunction, dummyTable);
+}
+
 }  // namespace gmock_generated_function_mockers_test
 }  // namespace testing
